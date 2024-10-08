@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        /* Styles for chatbot window, messages, input */
+        body, #chatbot-window, #chatbot-header, #chatbot-messages, #chatbot-input, .chat-message {
+            font-family: Rockwell, monospace;
+        }
+        .chatbot-window {
+            width: 90%;
+            max-width: 325px;
+            height: 60%;
+            max-height: 450px;
+            border: 2px solid #ddd;
+            border-radius: 17px;
+            background-color: white;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 1000;
+        }
+        #chatbot-header {
+            background-color: aliceblue;
+            color: black;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 20px;
+            text-align: center;
+            border-top-left-radius: 17px;
+            border-top-right-radius: 17px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #chatbot-messages {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+        #chatbot-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        #chatbot-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #chatbot-input button {
+            background-color: #28a745;
+            border: none;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            margin-left: 5px;
+            border-radius: 5px;
+        }
+        #chatbot-toggle {
+            width: 60px;
+            height: 60px;
+            /* background-color: #75d369;  */
+            background-color: transparent;   
+            border-radius: 50%;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 24px;
+            color: white;
+        }
+        .chat-message {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+            display: inline-block;
+            clear: both;
+        }
+        .chat-message.user {
+            background-color: dodgerblue;
+            color: white;
+            float: left;
+        }
+        .chat-message.bot {
+            background-color: #e0e0e0;
+            color: black;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatbotWindow" class="chatbot-window">
+        <div id="chatbot-header">
+            <div>
+                <span style="color:black;">SMART</span><span style="color:#34bb96;">B</span><span style="color:#ee5926;">O</span><span style="color:#fcb63b;">T</span>
+            </div>
+            <div class="online-indicator"></div> Online
+        </div>
+        
+        <div id="chatbot-messages">
+            <!-- Chat messages will appear here -->
+        </div>
+
+        <div id="chatbot-input">
+            <input type="text" id="userInput" placeholder="Please Enter Your Query">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    
+    <!-- <div id="chatbot-toggle" onclick="toggleChatbot()">
+        <img src="Chatbot.png" style="width: 60px; height: 60px; border-radius: 50%;">
+    </div> -->
+
+    <div id="chatbot-toggle" onclick="toggleChatbot()">
+        <img src="{{ url_for('static', filename='Chatbot.png') }}" style="width: 60px; height: 60px;">
+    </div>
+    
+
+    <script>
+        // Toggle chatbot visibility
+        function toggleChatbot() {
+            var chatbotWindow = document.getElementById("chatbotWindow");
+            if (chatbotWindow.style.display === "none" || chatbotWindow.style.display === "") {
+                chatbotWindow.style.display = "flex";
+            } else {
+                chatbotWindow.style.display = "none";
+            }
+        }
+
+        // Send message when user presses "Enter"
+        document.getElementById("userInput").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        // Function to send user message
+        function sendMessage() {
+            var userInput = document.getElementById("userInput").value.trim();
+            if (userInput !== "") {
+                appendMessage(userInput, 'user');
+                callAPI(userInput);
+                document.getElementById("userInput").value = "";
+            }
+        }
+
+        // Function to append messages to the chat
+        function appendMessage(message, sender) {
+            var messageElement = document.createElement("div");
+            messageElement.classList.add("chat-message", sender);
+            messageElement.textContent = message;
+
+            document.getElementById("chatbot-messages").appendChild(messageElement);
+            document.getElementById("chatbot-messages").scrollTop = document.getElementById("chatbot-messages").scrollHeight;
+        }
+
+        // Function to call the Flask API and get bot response
+        async function callAPI(userInput) {
+            try {
+                const response = await fetch('/api/chatbot/GetResponse', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: userInput })
+                });
+
+                const data = await response.json();
+                appendMessage(data.response, 'bot');
+            } catch (error) {
+                appendMessage('Error connecting to the server.', 'bot');
+            }
+        }
+    </script>
+</body>
+</html>
